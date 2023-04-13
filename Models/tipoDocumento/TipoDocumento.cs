@@ -15,14 +15,6 @@ public class TipoDocumento : IGeneric<TipoDocumento, GenericView>
 
     public string? TipoDocId { get; set; }
 
-    public string? IdUserCre { get; set; }
-
-    public DateTime? Create { get; set; }
-
-    public string? IdUserUpd { get; set; }
-
-    public DateTime? Tupdate { get; set; }
-
     public string? Descripcion { get; set; }
 
     public List<GenericView> Find(string data, string param, bool isFecha = false)
@@ -52,8 +44,24 @@ public class TipoDocumento : IGeneric<TipoDocumento, GenericView>
         return genericList;
     }
 
-    public Task<string?> Crud(TipoDocumento? objecto, Usuario user, char opc)
+    public async Task<string?> Crud(TipoDocumento? objecto, Usuario user, char opc)
     {
-        throw new NotImplementedException();
+        try
+        {
+            await using var connection = new SqlConnection(DbContext.Context);
+            await using var command = new SqlCommand("SP_TIPO_DOCUMENTO", connection);
+            _transformable.ConvertSqlCommand(command, objecto, user, opc);
+            await connection.OpenAsync();
+            await using var response = await command.ExecuteReaderAsync();
+            await response.ReadAsync();
+            while (response.HasRows) return response["Msj"] as string;
+            await connection.CloseAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+
+        return null;
     }
 }

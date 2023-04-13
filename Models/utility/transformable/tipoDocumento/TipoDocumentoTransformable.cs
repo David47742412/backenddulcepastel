@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System.Data;
+using Microsoft.Data.SqlClient;
 using websocket_api.Models.tipoDocumento;
 using websocket_api.Models.usuario;
 using websocket_api.Models.utility.interfaces.transformable;
@@ -16,8 +17,14 @@ public class
     };
 
 
-    public void ConvertSqlCommand(SqlCommand command, TipoDocumento objeto, Usuario user, char opc)
+    public virtual void ConvertSqlCommand(SqlCommand command, TipoDocumento? objeto, Usuario user, char opc)
     {
-        throw new NotImplementedException();
+        command.CommandType = CommandType.StoredProcedure;
+        command.Parameters.Add("@Opc", SqlDbType.Char).Value = opc;
+        command.Parameters.Add("@id", SqlDbType.VarChar).Value = objeto?.TipoDocId ?? "";
+        command.Parameters.Add("@descripcion", SqlDbType.VarChar).Value = objeto?.Descripcion ?? "";
+        command.Parameters.Add("@UseridCre", SqlDbType.VarChar).Value = user.Id;
+        command.Parameters.Add("@UseridUpd", SqlDbType.VarChar).Value = user.Id;
+        command.Parameters.Add("@Msj", SqlDbType.VarChar).Value = "";
     }
 }

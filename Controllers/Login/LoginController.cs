@@ -33,7 +33,7 @@ public class LoginController : Controller
             {
                 Status = usuario != null ? 200 : 400,
                 Message = usuario != null ? "Correct" : "Incorrect",
-                Data = new[] { usuario },
+                Data = new List<Usuario?>{ usuario },
                 Token = token
             };
 

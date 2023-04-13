@@ -1,7 +1,5 @@
 using System.Text;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.IdentityModel.Tokens;
 
 using websocket_api.Models.utility.context;
@@ -49,7 +47,6 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.UseAuthentication();
 app.MapControllers();
-app.UseCookiePolicy();
 var websocketOptions = new WebSocketOptions
 {
     KeepAliveInterval = TimeSpan.FromSeconds(30),
