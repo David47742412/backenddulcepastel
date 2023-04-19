@@ -15,24 +15,26 @@ public class CustomersController : Controller
 {
     private static List<WebSocket> _sockets = new();
     private static Cliente _repository = new();
-    
+
     private async Task Manager(WebSocket webSocket)
     {
-        while (true)
+        _sockets.Add(webSocket);
+
+        try
         {
-            if (_sockets.All(e => e.GetHashCode() != webSocket.GetHashCode())) _sockets.Add(webSocket); 
-            try
+            var buffer = new byte[1024 * 4];
+
+            while (webSocket.State == WebSocketState.Open)
             {
-                var buffer = new byte[1024 * 4];
-                var receiveResult = await webSocket.ReceiveAsync(
-                    new ArraySegment<byte>(buffer), CancellationToken.None);
-                if (receiveResult.CloseStatus != null)
-                {
-                    break;
-                }
+                var receiveResult =
+                    await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                Console.WriteLine($"Received {receiveResult.Count} bytes from socket {webSocket.GetHashCode()}");
+
                 var responseClient =
-                    JsonConvert.DeserializeObject<MessageSocket<Cliente>>
-                        (Encoding.UTF8.GetString(new ArraySegment<byte>(buffer, 0, receiveResult.Count)));
+                    JsonConvert.DeserializeObject<MessageSocket<Cliente>?>(
+                        Encoding.UTF8.GetString(new ArraySegment<byte>(buffer, 0, receiveResult.Count))) ??
+                    new MessageSocket<Cliente> { Message = "disconnect" };
+
                 var identity = new ClaimsIdentity();
                 identity.AddClaim(new Claim("__Token", responseClient.Token ?? ""));
                 var user = JwtConfig.ValidateToken(identity);
@@ -65,37 +67,36 @@ public class CustomersController : Controller
                             await _repository.Crud(responseClient.Data[0], user, 'E');
                             break;
                     }
-                    if (responseClient.Message.ToLower() != "find")
+
+                    if (responseClient.Message.ToLower() == "find") continue;
+                    var message = new ArraySegment<byte>(Encoding.UTF8.GetBytes(
+                        JsonConvert.SerializeObject(new MessageSocket<GenericView>
+                            { Message = "correct", Status = 200, Data = _repository.Find("", "") })));
+
+                    foreach (var socket in _sockets.Where(s => s != webSocket && s.State == WebSocketState.Open))
                     {
-                        foreach (var socket in _sockets)
-                        {
-                            await socket.SendAsync(
-                                new ArraySegment<byte>(Encoding.UTF8.GetBytes(
-                                    JsonConvert.SerializeObject(new MessageSocket<GenericView>
-                                        { Message = "correct", Status = 200, Data = _repository.Find("", "")}))),
-                                WebSocketMessageType.Text,
-                                true,
-                                CancellationToken.None
-                            );
-                        }
+                        await socket.SendAsync(message, WebSocketMessageType.Text, true, CancellationToken.None);
                     }
                 }
                 else
                 {
                     Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await webSocket.SendAsync(
-                        new ArraySegment<byte>(
-                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new MessageSocket<object>
-                                { Message = "Unauthorized", Status = 401 }))),
-                        WebSocketMessageType.Text,
-                        true,
-                        CancellationToken.None);
+                    var message = new ArraySegment<byte>(Encoding.UTF8.GetBytes(
+                        JsonConvert.SerializeObject(new MessageSocket<object>
+                            { Message = "Unauthorized", Status = 401 })));
+                    await webSocket.SendAsync(message, WebSocketMessageType.Text, true, CancellationToken.None);
                 }
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Socket {webSocket.GetHashCode()} closed due to error: {ex.Message}");
+        }
+        finally
+        {
+            _sockets.Remove(webSocket);
+            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Socket closed", CancellationToken.None);
+            Console.WriteLine($"Socket {webSocket.GetHashCode()} closed");
         }
     }
 

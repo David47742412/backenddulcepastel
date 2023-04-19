@@ -96,7 +96,6 @@ public class DocumentController : Controller
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
-                break;
             }
         }
     }

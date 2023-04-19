@@ -19,7 +19,7 @@ public static class GetCookie
             identity.AddClaim(new Claim("__Token", tokenValue!));
             return JwtConfig.ValidateToken(identity)!;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return null;
         }

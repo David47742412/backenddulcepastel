@@ -72,7 +72,7 @@ public class Cliente : IGeneric<Cliente, GenericView>
             await using var command = new SqlCommand("SP_CLIENTE", connection);
             _transformable.ConvertSqlCommand(command, objecto, user, opc);
             connection.Open();
-            await using var response = command.ExecuteReader();
+            await using var response = await command.ExecuteReaderAsync();
             response.Read();
             if (response.HasRows) message = response["Msj"] as string;
             connection.Close();

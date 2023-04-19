@@ -44,7 +44,7 @@ public class LoginController : Controller
                 CancellationToken.None
                 );
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // ignored
         }

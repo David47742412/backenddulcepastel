@@ -6,7 +6,7 @@ namespace websocket_api.Controllers.Main;
 public class MainController : Controller
 {
     [Route("/")]
-    public async Task OnConnect()
+    public void OnConnect()
     {
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
