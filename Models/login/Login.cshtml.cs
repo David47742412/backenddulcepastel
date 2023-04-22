@@ -14,17 +14,17 @@ public class Login
 
     public string? Password { get; set; }
 
-    public Usuario? IsValidUser(Login user)
+    public async Task<Usuario?> IsValidUser(Login user)
     {
         try
         {
-            using var connection = new SqlConnection(DbContext.Context);
-            using var command = new SqlCommand("SP_LOGIN", connection);
+            await using var connection = new SqlConnection(DbContext.Context);
+            await using var command = new SqlCommand("SP_LOGIN", connection);
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.Add("@Email", SqlDbType.VarChar).Value = user.Email ?? "";
-            connection.Open();
-            using var result = command.ExecuteReader();
-            result.Read();
+            await connection.OpenAsync();
+            await using var result = await command.ExecuteReaderAsync();
+            await result.ReadAsync();
             if (!result.HasRows) return null;
             var usuario = _transformable.Convert(result);
             var password = result["usuario_password"] as string;

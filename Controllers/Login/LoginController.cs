@@ -22,7 +22,7 @@ public class LoginController : Controller
             var loginResult =
                 JsonConvert.DeserializeObject<Models.login.Login>(
                     Encoding.UTF8.GetString(new ArraySegment<byte>(buffer, 0, receiveResult.Count)));
-            var usuario = login.IsValidUser(loginResult ?? new Models.login.Login());
+            var usuario = await login.IsValidUser(loginResult ?? new Models.login.Login());
             var token = "";
             if (usuario is not null)
             {

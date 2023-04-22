@@ -11,8 +11,7 @@ public class DbContext
         Context = context;
     }
 
-    public static DbContext GetInstance(string conexion)
-    {
-        return _credentials ?? new DbContext(conexion);
-    }
+    public static DbContext GetInstance(string conexion) => 
+        _credentials ?? new DbContext(conexion);
+    
 }

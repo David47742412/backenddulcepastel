@@ -32,7 +32,7 @@ public class DocumentController : Controller
                     break;
                 }
                 var responseClient =
-                    JsonConvert.DeserializeObject<MessageSocket<TipoDocumento>>
+                    JsonConvert.DeserializeObject<MessageSocket<TipoDocumento>> 
                         (Encoding.UTF8.GetString(new ArraySegment<byte>(buffer, 0, receiveResult.Count)));
                 var identity = new ClaimsIdentity();
                 identity.AddClaim(new Claim("__Token", responseClient.Token ?? ""));
